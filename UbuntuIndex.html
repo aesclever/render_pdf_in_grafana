@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Grafana PDF Reporter – Ubuntu 24.04 Setup Guide</title>
+<!-- nav fix applied: data-target + addEventListener replaces inline onclick -->
 <style>
   :root {
     --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
@@ -20,6 +21,7 @@
   .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-top: 8px; }
   .nav-link { display: block; padding: 6px 20px; color: var(--muted); text-decoration: none; font-size: 13px; border-left: 3px solid transparent; transition: all .15s; cursor: pointer; }
   .nav-link:hover, .nav-link.active { color: var(--text); background: var(--surface2); border-left-color: var(--accent); }
+  .nav-link { cursor: pointer; }
   h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; color: #fff; }
   h2 { font-size: 19px; font-weight: 700; margin: 36px 0 14px; color: #fff; display: flex; align-items: center; gap: 10px; }
   h3 { font-size: 15px; font-weight: 600; margin: 22px 0 10px; color: var(--text); }
@@ -73,6 +75,13 @@
 </style>
 </head>
 <body>
+
+<div class="topbar">
+  <a href="index.html">← All Guides</a>
+  <span class="topbar-sep">|</span>
+  <span class="topbar-title">🪟 Windows Guide</span>
+  <span style="margin-left:auto"><a href="grafana-ubuntu-guide.html">Switch to Ubuntu →</a></span>
+</div>
 
 <nav class="sidebar">
   <div class="sidebar-title">🐧 Grafana PDF Guide</div>
