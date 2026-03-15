@@ -219,22 +219,25 @@ sudo apt-get install -y grafana</pre>
   <h3>1.a.a Fix grafana package not found.</h3>
   <div class="code-block">
   <div class="code-header"><span>bash — run with sudo</span><span class="lang">bash</span></div>
-  # 1. Remove any broken previous attempt
-  sudo rm -f /etc/apt/keyrings/grafana.gpg
-  sudo rm -f /etc/apt/sources.list.d/grafana.list
+    <span class="cmt"> # 1. Remove any broken previous attempt</span>
+    sudo rm -f /etc/apt/keyrings/grafana.gpg
+    sudo rm -f /etc/apt/sources.list.d/grafana.list
   
-  # 2. Add the key correctly (official current method)
-  sudo mkdir -p /etc/apt/keyrings
-  sudo wget -O /etc/apt/keyrings/grafana.asc https://apt.grafana.com/gpg-full.key
-  sudo chmod 644 /etc/apt/keyrings/grafana.asc
+    <span class="cmt"> # 2. Add the key correctly (official current method)</span>
+    
+    sudo mkdir -p /etc/apt/keyrings
+    sudo wget -O /etc/apt/keyrings/grafana.asc https://apt.grafana.com/gpg-full.key
+    sudo chmod 644 /etc/apt/keyrings/grafana.asc
   
-  # 3. Add the repo referencing the .asc key
-  echo "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main" \
-    | sudo tee /etc/apt/sources.list.d/grafana.list
+    <span class="cmt"> # 3. Add the repo referencing the .asc key</span>span>
+    
+    echo "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main" \
+      | sudo tee /etc/apt/sources.list.d/grafana.list
   
-  # 4. Update and install
-  sudo apt-get update
-  sudo apt-get install -y grafana
+    <span class="cmt"> # 4. Update and install</span>span>
+    
+    sudo apt-get update
+    sudo apt-get install -y grafana
 
   </div>
 </div>
