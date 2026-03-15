@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grafana PDF Reporter – Ubuntu 24.04 Setup Guide</title>
+<style>
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --surface2: #22263a;
+    --accent: #f97316; --accent2: #6366f1; --green: #22c55e;
+    --yellow: #eab308; --red: #ef4444; --text: #e2e8f0;
+    --muted: #94a3b8; --border: #2e3347; --code-bg: #0d1117;
+    --radius: 8px; --font-mono: 'Cascadia Code','Consolas',monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI',system-ui,sans-serif; font-size: 14px; line-height: 1.7; }
+  .sidebar { position: fixed; top: 0; left: 0; width: 230px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px 0; z-index: 100; }
+  .content { margin-left: 230px; padding: 32px 40px; max-width: 900px; }
+  .sidebar-title { padding: 0 20px 16px; font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .12em; text-transform: uppercase; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-top: 8px; }
+  .nav-link { display: block; padding: 6px 20px; color: var(--muted); text-decoration: none; font-size: 13px; border-left: 3px solid transparent; transition: all .15s; cursor: pointer; }
+  .nav-link:hover, .nav-link.active { color: var(--text); background: var(--surface2); border-left-color: var(--accent); }
+  h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+  h2 { font-size: 19px; font-weight: 700; margin: 36px 0 14px; color: #fff; display: flex; align-items: center; gap: 10px; }
+  h3 { font-size: 15px; font-weight: 600; margin: 22px 0 10px; color: var(--text); }
+  .step-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent); color: #fff; border-radius: 50%; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .step-badge.green { background: var(--green); }
+  .step-badge.indigo { background: var(--accent2); }
+  .phase { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin: 36px 0 20px; }
+  .phase-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  .phase h2 { margin: 0; font-size: 18px; }
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); margin: 12px 0; overflow: hidden; }
+  .code-header { background: var(--surface2); padding: 7px 14px; font-size: 11px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+  .code-header .lang { color: var(--accent); }
+  pre { padding: 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; color: #c9d1d9; }
+  .kw { color: #ff7b72; } .str { color: #a5d6ff; } .cmt { color: #8b949e; font-style: italic; } .val { color: #79c0ff; } .key { color: #d2a8ff; }
+  .callout { border-radius: var(--radius); padding: 13px 16px; margin: 14px 0; display: flex; gap: 12px; align-items: flex-start; font-size: 13px; border-left: 3px solid; }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .callout.info { background: #1e3a5f22; border-color: #3b82f6; }
+  .callout.info .callout-icon { color: #3b82f6; }
+  .callout.warn { background: #78350f22; border-color: var(--yellow); }
+  .callout.warn .callout-icon { color: var(--yellow); }
+  .callout.success { background: #14532d22; border-color: var(--green); }
+  .callout.success .callout-icon { color: var(--green); }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .card-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+  th { background: var(--surface2); padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: var(--surface); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .tag.blue { background: #1e3a5f; color: #93c5fd; }
+  .tag.green { background: #14532d; color: #86efac; }
+  .tag.orange { background: #7c2d12; color: #fdba74; }
+  .tag.purple { background: #3b1f6e; color: #c4b5fd; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+  .subsection { border-left: 3px solid var(--surface2); padding-left: 18px; margin: 16px 0; }
+  .hero { background: linear-gradient(135deg,#1a1d27 0%,#0f1117 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 32px; }
+  .hero p { color: var(--muted); margin-top: 8px; max-width: 600px; }
+  .hero-badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .flow { display: flex; align-items: center; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+  .flow-node { background: var(--surface2); border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .flow-arrow { color: var(--muted); font-size: 16px; }
+  .diff-table td:first-child { font-weight: 600; color: var(--text); width: 38%; }
+  .diff-table .win { color: #60a5fa; }
+  .diff-table .ub { color: var(--green); }
+  p { margin-bottom: 10px; color: var(--muted); }
+  li { color: var(--muted); margin-left: 20px; margin-bottom: 4px; }
+  strong { color: var(--text); }
+  section { scroll-margin-top: 20px; }
+  @media (max-width:700px) { .sidebar{display:none} .content{margin-left:0;padding:20px} .card-grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-title">🐧 Grafana PDF Guide</div>
+  <div class="nav-section">Overview</div>
+  <a class="nav-link active" onclick="go('overview')">Architecture</a>
+  <a class="nav-link" onclick="go('diff')">Windows → Ubuntu Diff</a>
+  <a class="nav-link" onclick="go('prereqs')">Prerequisites</a>
+  <div class="nav-section">Phase 1 – Grafana</div>
+  <a class="nav-link" onclick="go('install-grafana')">Install Grafana</a>
+  <a class="nav-link" onclick="go('datasource')">Add Datasource</a>
+  <a class="nav-link" onclick="go('dashboard')">Build Dashboard</a>
+  <div class="nav-section">Phase 2 – Renderer</div>
+  <a class="nav-link" onclick="go('renderer')">Image Renderer</a>
+  <a class="nav-link" onclick="go('grafana-ini')">grafana.ini Config</a>
+  <div class="nav-section">Phase 3 – PDF Plugin</div>
+  <a class="nav-link" onclick="go('reporter-install')">Install Reporter</a>
+  <a class="nav-link" onclick="go('reporter-config')">Enable Plugin</a>
+  <a class="nav-link" onclick="go('generate-pdf')">Generate PDF</a>
+  <div class="nav-section">Reference</div>
+  <a class="nav-link" onclick="go('api-params')">API Parameters</a>
+  <a class="nav-link" onclick="go('troubleshoot')">Troubleshooting</a>
+</nav>
+
+<main class="content">
+
+<!-- HERO -->
+<section id="overview">
+<div class="hero">
+  <h1>Grafana → PDF on Ubuntu 24.04</h1>
+  <p>Same stack as the Windows guide — Grafana OSS, TestData datasource, grafana-image-renderer, and the mahendrapaipuri dashboard reporter — now running natively on Ubuntu 24.04 LTS using <strong>apt</strong>, <strong>systemd</strong>, and proper Linux service patterns.</p>
+  <div class="hero-badges">
+    <span class="tag blue">Grafana ≥ 10.4</span>
+    <span class="tag green">100% Free / OSS</span>
+    <span class="tag purple">Ubuntu 24.04 LTS</span>
+    <span class="tag orange">systemd services</span>
+  </div>
+</div>
+
+<h2>Architecture Overview</h2>
+<div class="flow">
+  <div class="flow-node">TestData / CSV</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-node">Grafana OSS (systemd)</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-node">grafana-image-renderer (systemd)</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-node">dashboard-reporter-app (plugin)</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-node">📄 PDF</div>
+</div>
+<p>The data flow is identical to the Windows version. Only the <strong>installation methods, paths, service management, and dependency tooling</strong> change.</p>
+</section>
+
+<hr/>
+
+<!-- DIFF SECTION -->
+<section id="diff">
+<h2>🔄 Windows → Ubuntu: What Changed</h2>
+<p>Every substantive difference from the Windows guide is called out here so you know exactly what to expect.</p>
+
+<table class="diff-table">
+  <thead><tr><th>Concern</th><th class="win">Windows</th><th class="ub">Ubuntu 24.04</th></tr></thead>
+  <tbody>
+    <tr><td>Grafana install</td><td>MSI installer</td><td><code>apt</code> via Grafana APT repo</td></tr>
+    <tr><td>Service manager</td><td>Windows Service (SCM)</td><td><code>systemd</code> units</td></tr>
+    <tr><td>NSSM</td><td>Required to wrap renderer as service</td><td>Not needed — write a <code>.service</code> file</td></tr>
+    <tr><td>Config paths</td><td><code>C:\Program Files\GrafanaLabs\grafana\</code></td><td><code>/etc/grafana/</code>, <code>/var/lib/grafana/</code></td></tr>
+    <tr><td>Plugins directory</td><td><code>data\plugins\</code> under install root</td><td><code>/var/lib/grafana/plugins/</code></td></tr>
+    <tr><td>Renderer binary</td><td>Windows x64 zip from GitHub</td><td>Linux x64 tar.gz from GitHub</td></tr>
+    <tr><td>Chromium sandbox</td><td><code>--no-sandbox</code> flag required</td><td><code>--no-sandbox</code> still needed (non-root)</td></tr>
+    <tr><td>File permissions</td><td>Handled by installer</td><td>Must <code>chown</code> renderer dir to service user</td></tr>
+    <tr><td>Firewall</td><td>Windows Defender rules</td><td><code>ufw</code> (optional, same ports)</td></tr>
+    <tr><td>Shell</td><td>PowerShell</td><td>Bash</td></tr>
+  </tbody>
+</table>
+</section>
+
+<hr/>
+
+<!-- PREREQS -->
+<section id="prereqs">
+<h2><span class="step-badge">0</span> Prerequisites</h2>
+
+<table>
+  <thead><tr><th>Requirement</th><th>Note</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Ubuntu 24.04 LTS</strong></td><td>Desktop or Server edition; fresh install recommended</td></tr>
+    <tr><td><strong>sudo access</strong></td><td>All commands below assume a non-root sudo user</td></tr>
+    <tr><td><strong>curl, wget, apt-transport-https, gnupg</strong></td><td>Usually pre-installed; confirmed in Step 1</td></tr>
+    <tr><td><strong>Ports open</strong></td><td>3000 (Grafana), 8081 (renderer) — localhost only is fine</td></tr>
+  </tbody>
+</table>
+
+<div class="callout info">
+  <span class="callout-icon">ℹ️</span>
+  <div>All commands run as your regular sudo user. The Grafana and renderer services run under dedicated system accounts (<code>grafana</code> and <code>grafana-renderer</code>) created automatically or manually below.</div>
+</div>
+</section>
+
+<hr/>
+
+<!-- PHASE 1 -->
+<div class="phase">
+  <div class="phase-label">Phase 1</div>
+  <h2>Install Grafana &amp; Build the Dashboard</h2>
+</div>
+
+<section id="install-grafana">
+<h2><span class="step-badge">1</span> Install Grafana via APT</h2>
+
+<div class="subsection">
+<h3>1a. Add the Grafana APT repository</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash — run with sudo</span><span class="lang">bash</span></div>
+  <pre><span class="cmt"># Install prerequisites</span>
+sudo apt-get update
+sudo apt-get install -y apt-transport-https software-properties-common wget curl gnupg
+
+<span class="cmt"># Add Grafana GPG key</span>
+sudo mkdir -p /etc/apt/keyrings
+wget -q -O - https://apt.grafana.com/gpg.key \
+  | gpg --dearmor \
+  | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+
+<span class="cmt"># Add the stable OSS repository</span>
+echo <span class="str">"deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main"</span> \
+  | sudo tee /etc/apt/sources.list.d/grafana.list
+
+<span class="cmt"># Install Grafana OSS</span>
+sudo apt-get update
+sudo apt-get install -y grafana</pre>
+</div>
+
+<h3>1b. Enable &amp; start the service</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>sudo systemctl daemon-reload
+sudo systemctl enable grafana-server
+sudo systemctl start grafana-server
+
+<span class="cmt"># Verify it's running</span>
+sudo systemctl status grafana-server</pre>
+</div>
+
+<div class="callout success">
+  <span class="callout-icon">✅</span>
+  <div>Open <strong>http://localhost:3000</strong> (or your server IP). Default credentials: <code>admin / admin</code>. You'll be prompted to change the password on first login.</div>
+</div>
+
+<h3>Key paths on Ubuntu</h3>
+<table>
+  <thead><tr><th>Purpose</th><th>Path</th></tr></thead>
+  <tbody>
+    <tr><td>Main config</td><td><code>/etc/grafana/grafana.ini</code></td></tr>
+    <tr><td>Provisioning</td><td><code>/etc/grafana/provisioning/</code></td></tr>
+    <tr><td>Plugins</td><td><code>/var/lib/grafana/plugins/</code></td></tr>
+    <tr><td>Data / DB</td><td><code>/var/lib/grafana/</code></td></tr>
+    <tr><td>Logs</td><td><code>/var/log/grafana/grafana.log</code></td></tr>
+    <tr><td>Service user</td><td><code>grafana</code></td></tr>
+  </tbody>
+</table>
+</div>
+</section>
+
+<section id="datasource">
+<h2><span class="step-badge">2</span> Provision the TestData Datasource</h2>
+
+<div class="subsection">
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>sudo tee /etc/grafana/provisioning/datasources/testdata.yml &lt;&lt;'EOF'
+apiVersion: 1
+datasources:
+  - name: TestData
+    type: testdata
+    access: proxy
+    isDefault: true
+EOF</pre>
+</div>
+</div>
+</section>
+
+<section id="dashboard">
+<h2><span class="step-badge">3</span> Provision the Sample Dashboard</h2>
+
+<div class="subsection">
+<h3>3a. Create JSON directory &amp; provisioning config</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>sudo mkdir -p /etc/grafana/provisioning/dashboards/json
+
+sudo tee /etc/grafana/provisioning/dashboards/local.yml &lt;&lt;'EOF'
+apiVersion: 1
+providers:
+  - name: Local Dashboards
+    folder: Demo
+    type: file
+    options:
+      path: /etc/grafana/provisioning/dashboards/json
+EOF</pre>
+</div>
+
+<h3>3b. Write the dashboard JSON</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash — heredoc writes the full JSON</span><span class="lang">bash</span></div>
+  <pre>sudo tee /etc/grafana/provisioning/dashboards/json/sales-report.json &lt;&lt;'EOF'
+{
+  "title": "Sales Report Dashboard",
+  "uid": "sales-demo-001",
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-7d", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "timeseries",
+      "title": "Daily Revenue Trend",
+      "gridPos": { "x":0,"y":0,"w":16,"h":8 },
+      "datasource": { "type": "testdata" },
+      "targets": [{
+        "refId": "A",
+        "scenarioId": "random_walk",
+        "alias": "Revenue ($)",
+        "startValue": 5000, "spread": 800
+      }],
+      "fieldConfig": { "defaults": {
+        "unit": "currencyUSD",
+        "color": { "mode": "palette-classic" },
+        "custom": { "fillOpacity": 15, "lineWidth": 2 }
+      }}
+    },
+    {
+      "id": 2, "type": "timeseries",
+      "title": "Orders vs Returns",
+      "gridPos": { "x":16,"y":0,"w":8,"h":8 },
+      "datasource": { "type": "testdata" },
+      "targets": [
+        { "refId": "A", "scenarioId": "random_walk", "alias": "Orders", "startValue": 120 },
+        { "refId": "B", "scenarioId": "random_walk", "alias": "Returns", "startValue": 8, "spread": 3 }
+      ]
+    },
+    {
+      "id": 3, "type": "table",
+      "title": "Product Sales Summary",
+      "gridPos": { "x":0,"y":8,"w":24,"h":8 },
+      "datasource": { "type": "testdata" },
+      "targets": [{
+        "refId": "A",
+        "scenarioId": "csv_metric_values",
+        "alias": "Sales Data",
+        "csvContent": "Product,Region,Units,Revenue\nWidget A,North,340,17000\nWidget B,South,210,10500\nGadget X,East,520,41600\nGadget Y,West,180,14400\nTool Z,North,95,7125\nTool Z,South,310,23250"
+      }],
+      "options": { "sortBy": [{ "displayName": "Revenue", "desc": true }] },
+      "fieldConfig": {
+        "defaults": { "filterable": true },
+        "overrides": [{ "matcher": { "id": "byName", "options": "Revenue" },
+          "properties": [{ "id": "unit", "value": "currencyUSD" }]
+        }]
+      }
+    }
+  ]
+}
+EOF</pre>
+</div>
+
+<h3>3c. Fix ownership &amp; restart Grafana</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre><span class="cmt"># Grafana's service user must be able to read these files</span>
+sudo chown -R root:grafana /etc/grafana/provisioning/
+sudo chmod -R 750 /etc/grafana/provisioning/
+
+sudo systemctl restart grafana-server</pre>
+</div>
+<p>Visit <strong>http://localhost:3000/dashboards</strong> → folder <em>Demo</em> → <em>Sales Report Dashboard</em>.</p>
+</div>
+</section>
+
+<hr/>
+
+<!-- PHASE 2 -->
+<div class="phase">
+  <div class="phase-label">Phase 2</div>
+  <h2>Install grafana-image-renderer (Linux Binary)</h2>
+</div>
+
+<section id="renderer">
+<h2><span class="step-badge green">4</span> Download &amp; Install the Renderer</h2>
+
+<div class="callout warn">
+  <span class="callout-icon">⚠️</span>
+  <div>Use the <strong>standalone binary service</strong> from GitHub Releases — not the deprecated <code>grafana-cli plugins install grafana-image-renderer</code> plugin form.</div>
+</div>
+
+<div class="subsection">
+<h3>4a. Install Chromium dependencies</h3>
+<p>The renderer ships its own Chromium, but it needs system libraries on Ubuntu.</p>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>sudo apt-get install -y \
+  libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 \
+  libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 \
+  libxss1 libxtst6 libnss3 libatk1.0-0 libatk-bridge2.0-0 \
+  libcups2 libdrm2 libgbm1 libasound2t64 libpangocairo-1.0-0 \
+  libpango-1.0-0 libcairo2 libgdk-pixbuf2.0-0 libgtk-3-0 \
+  fonts-liberation libappindicator3-1 xdg-utils</pre>
+</div>
+
+<h3>4b. Download &amp; extract the Linux binary</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre><span class="cmt"># Check https://github.com/grafana/grafana-image-renderer/releases for latest version</span>
+RENDERER_VER=<span class="str">"5.0.2"</span>
+wget -q "https://github.com/grafana/grafana-image-renderer/releases/download/v${RENDERER_VER}/grafana-image-renderer-${RENDERER_VER}-linux-x64.tar.gz" \
+  -O /tmp/renderer.tar.gz
+
+sudo mkdir -p /opt/grafana-renderer
+sudo tar -xzf /tmp/renderer.tar.gz -C /opt/grafana-renderer --strip-components=1</pre>
+</div>
+
+<h3>4c. Create a dedicated service user &amp; fix permissions</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>sudo useradd --system --no-create-home --shell /usr/sbin/nologin grafana-renderer
+sudo chown -R grafana-renderer:grafana-renderer /opt/grafana-renderer</pre>
+</div>
+
+<h3>4d. Write the renderer config</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>sudo tee /opt/grafana-renderer/config.json &lt;&lt;'EOF'
+{
+  "service": {
+    "host": "localhost",
+    "port": 8081
+  },
+  "rendering": {
+    "args": ["--no-sandbox", "--disable-setuid-sandbox"],
+    "timeout": 30,
+    "mode": "default"
+  },
+  "security": {
+    "authToken": "my-renderer-secret-token"
+  }
+}
+EOF
+sudo chown grafana-renderer:grafana-renderer /opt/grafana-renderer/config.json</pre>
+</div>
+
+<h3>4e. Create a systemd unit (replaces NSSM)</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>sudo tee /etc/systemd/system/grafana-renderer.service &lt;&lt;'EOF'
+[Unit]
+Description=Grafana Image Renderer Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=grafana-renderer
+Group=grafana-renderer
+WorkingDirectory=/opt/grafana-renderer
+ExecStart=/opt/grafana-renderer/grafana-image-renderer server \
+  --config=/opt/grafana-renderer/config.json
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=grafana-renderer
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+EOF</pre>
+</div>
+
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>sudo systemctl daemon-reload
+sudo systemctl enable grafana-renderer
+sudo systemctl start grafana-renderer
+
+<span class="cmt"># Verify</span>
+sudo systemctl status grafana-renderer
+curl -s http://localhost:8081   <span class="cmt"># should return renderer info</span></pre>
+</div>
+
+<div class="callout success">
+  <span class="callout-icon">✅</span>
+  <div>If <code>curl http://localhost:8081</code> returns a JSON response or renderer page, the image renderer is healthy.</div>
+</div>
+</div>
+</section>
+
+<section id="grafana-ini">
+<h2><span class="step-badge green">5</span> Configure /etc/grafana/grafana.ini</h2>
+
+<div class="code-block">
+  <div class="code-header"><span>bash — append/edit relevant sections</span><span class="lang">bash</span></div>
+  <pre>sudo tee -a /etc/grafana/grafana.ini &lt;&lt;'EOF'
+
+[rendering]
+server_url = http://localhost:8081/render
+callback_url = http://localhost:3000/
+renderer_token = my-renderer-secret-token
+concurrent_render_request_limit = 10
+
+[feature_toggles]
+enable = accessControlOnCall externalServiceAccounts
+
+[plugins]
+allow_loading_unsigned_plugins = mahendrapaipuri-dashboardreporter-app
+EOF
+
+sudo systemctl restart grafana-server</pre>
+</div>
+
+<div class="callout info">
+  <span class="callout-icon">ℹ️</span>
+  <div>The <code>renderer_token</code> value must exactly match <code>authToken</code> in <code>/opt/grafana-renderer/config.json</code>. Both are set to <code>my-renderer-secret-token</code> above — change both together in production.</div>
+</div>
+</section>
+
+<hr/>
+
+<!-- PHASE 3 -->
+<div class="phase">
+  <div class="phase-label">Phase 3</div>
+  <h2>Install &amp; Use the Dashboard Reporter (PDF) Plugin</h2>
+</div>
+
+<section id="reporter-install">
+<h2><span class="step-badge indigo">6</span> Install the Reporter Plugin</h2>
+
+<div class="subsection">
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>PLUGIN_VER=<span class="str">"1.8.0"</span>   <span class="cmt"># check github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases</span>
+PLUGIN_URL=<span class="str">"https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v${PLUGIN_VER}/mahendrapaipuri-dashboardreporter-app-${PLUGIN_VER}.zip"</span>
+
+wget -q <span class="val">$PLUGIN_URL</span> -O /tmp/reporter-plugin.zip
+
+<span class="cmt"># Unzip into Grafana's plugins directory</span>
+sudo unzip -q /tmp/reporter-plugin.zip \
+  -d /var/lib/grafana/plugins/
+
+<span class="cmt"># Normalize the folder name (strip version suffix if present)</span>
+sudo mv /var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app-${PLUGIN_VER} \
+        /var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app \
+        2>/dev/null || true
+
+<span class="cmt"># Fix ownership — plugin must be readable by the grafana service user</span>
+sudo chown -R grafana:grafana /var/lib/grafana/plugins/mahendrapaipuri-dashboardreporter-app
+
+sudo systemctl restart grafana-server</pre>
+</div>
+
+<div class="callout warn">
+  <span class="callout-icon">⚠️</span>
+  <div>You will see <em>"plugin signature invalid"</em> in <code>journalctl -u grafana-server</code> — this is expected and non-fatal, controlled by the <code>allow_loading_unsigned_plugins</code> line you added in Step 5.</div>
+</div>
+</div>
+</section>
+
+<section id="reporter-config">
+<h2><span class="step-badge indigo">7</span> Enable &amp; Configure the Plugin in Grafana UI</h2>
+
+<div class="subsection">
+<ol style="padding-left:20px; line-height:2.2">
+  <li>Log in as <strong>admin</strong> at <code>http://localhost:3000</code></li>
+  <li>Go to <strong>Apps → Dashboard Reporter App → Configuration</strong></li>
+  <li>Toggle the plugin to <strong>Enabled</strong></li>
+  <li>Set <strong>Grafana App URL</strong> → <code>http://localhost:3000</code></li>
+  <li>Under <em>Layout</em>, choose <strong>Grid</strong> (mirrors dashboard layout) or <strong>Simple</strong></li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<h3>(Optional) Manual Service Account Token</h3>
+<p>If the <code>externalServiceAccounts</code> feature flag is unavailable:</p>
+<ol style="padding-left:20px; line-height:2">
+  <li><strong>Administration → Service accounts → Add service account</strong></li>
+  <li>Role: <strong>Viewer</strong></li>
+  <li>Generate a token and paste it into the reporter plugin's <em>Service Account Token</em> field</li>
+</ol>
+</div>
+</section>
+
+<section id="generate-pdf">
+<h2><span class="step-badge indigo">8</span> Generate Your First PDF</h2>
+
+<div class="subsection">
+<h3>Method A — Browser (simplest)</h3>
+<div class="code-block">
+  <div class="code-header"><span>Browser Address Bar</span></div>
+  <pre>http://localhost:3000/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=sales-demo-001</pre>
+</div>
+<p>The browser downloads a PDF of the full dashboard while you are logged in as admin.</p>
+
+<h3>Method B — curl (automation &amp; cron)</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre>GRAFANA_URL=<span class="str">"http://localhost:3000"</span>
+DASH_UID=<span class="str">"sales-demo-001"</span>
+TOKEN=<span class="str">"&lt;your-service-account-token&gt;"</span>
+DATE=$(date +%Y%m%d)
+
+curl -s -H <span class="str">"Authorization: Bearer $TOKEN"</span> \
+  <span class="str">"${GRAFANA_URL}/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=${DASH_UID}&amp;from=now-7d&amp;to=now&amp;includePanelDataID=3"</span> \
+  -o <span class="str">"SalesReport-${DATE}.pdf"</span>
+
+echo <span class="str">"PDF saved: SalesReport-${DATE}.pdf"</span></pre>
+</div>
+
+<h3>Method C — Scheduled via cron</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash — add to crontab -e</span><span class="lang">bash</span></div>
+  <pre><span class="cmt"># Every Monday at 07:00, generate and save the weekly report</span>
+0 7 * * 1 TOKEN=<span class="str">"&lt;token&gt;"</span> DASH=<span class="str">"sales-demo-001"</span> \
+  curl -s -H <span class="str">"Authorization: Bearer $TOKEN"</span> \
+  <span class="str">"http://localhost:3000/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=$DASH&amp;from=now-7d&amp;to=now"</span> \
+  -o <span class="str">"/home/ubuntu/reports/sales-$(date +\%Y\%m\%d).pdf"</span></pre>
+</div>
+
+<div class="callout success">
+  <span class="callout-icon">✅</span>
+  <div><code>includePanelDataID=3</code> appends the raw tabular data from the <em>Product Sales Summary</em> table panel to the end of the PDF, alongside its visual screenshot.</div>
+</div>
+</div>
+</section>
+
+<hr/>
+
+<!-- REFERENCE -->
+<section id="api-params">
+<h2>📋 Reporter API — Key Query Parameters</h2>
+<table>
+  <thead><tr><th>Parameter</th><th>Example</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>dashUid</code></td><td><code>sales-demo-001</code></td><td>Dashboard UID (required)</td></tr>
+    <tr><td><code>from</code> / <code>to</code></td><td><code>now-7d</code> / <code>now</code></td><td>Time range override</td></tr>
+    <tr><td><code>var-region</code></td><td><code>North</code></td><td>Pass a template variable value</td></tr>
+    <tr><td><code>includePanelDataID</code></td><td><code>3</code></td><td>Append raw CSV/table data from panel N</td></tr>
+    <tr><td><code>layout</code></td><td><code>grid</code> or <code>simple</code></td><td>PDF layout mode</td></tr>
+    <tr><td><code>orientation</code></td><td><code>landscape</code></td><td>Page orientation</td></tr>
+    <tr><td><code>includePanelID</code></td><td><code>1</code></td><td>Include only specific panel(s)</td></tr>
+    <tr><td><code>excludePanelID</code></td><td><code>2</code></td><td>Exclude specific panel(s)</td></tr>
+  </tbody>
+</table>
+</section>
+
+<hr/>
+
+<section id="troubleshoot">
+<h2>🔧 Troubleshooting</h2>
+<table>
+  <thead><tr><th>Symptom</th><th>Likely Cause</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td>PDF is blank / panels missing</td><td>Renderer not running</td><td><code>systemctl status grafana-renderer</code>; test <code>curl http://localhost:8081</code></td></tr>
+    <tr><td>Renderer fails to start</td><td>Missing Chromium libs</td><td>Re-run the <code>apt-get install</code> in Step 4a; check <code>journalctl -u grafana-renderer -n 50</code></td></tr>
+    <tr><td>Plugin not found (404)</td><td>Folder name mismatch or plugin not loaded</td><td><code>journalctl -u grafana-server | grep plugin</code>; confirm folder is named <code>mahendrapaipuri-dashboardreporter-app</code> exactly</td></tr>
+    <tr><td>"Plugin signature invalid"</td><td>Expected for unsigned community plugins</td><td>Confirm <code>allow_loading_unsigned_plugins</code> is in <code>/etc/grafana/grafana.ini</code></td></tr>
+    <tr><td>401 Unauthorized on PDF endpoint</td><td>Missing Bearer token or plugin not enabled</td><td>Check service account token; confirm plugin is enabled in UI</td></tr>
+    <tr><td>Renderer token mismatch</td><td><code>renderer_token</code> ≠ <code>authToken</code></td><td>Make both values identical in <code>grafana.ini</code> and <code>/opt/grafana-renderer/config.json</code></td></tr>
+    <tr><td>Permission denied on provisioning files</td><td>Wrong file ownership</td><td><code>sudo chown -R root:grafana /etc/grafana/provisioning &amp;&amp; sudo chmod -R 750 /etc/grafana/provisioning</code></td></tr>
+    <tr><td>Chromium crashes in renderer</td><td>Sandbox restriction</td><td>Confirm <code>--no-sandbox</code> is in renderer <code>config.json</code> args; renderer should not run as root</td></tr>
+  </tbody>
+</table>
+
+<h3>Useful log commands</h3>
+<div class="code-block">
+  <div class="code-header"><span>bash</span><span class="lang">bash</span></div>
+  <pre><span class="cmt"># Live Grafana logs</span>
+sudo journalctl -u grafana-server -f
+
+<span class="cmt"># Live renderer logs</span>
+sudo journalctl -u grafana-renderer -f
+
+<span class="cmt"># Last 50 lines of each</span>
+sudo journalctl -u grafana-server -n 50 --no-pager
+sudo journalctl -u grafana-renderer -n 50 --no-pager
+
+<span class="cmt"># Check both services at a glance</span>
+systemctl status grafana-server grafana-renderer</pre>
+</div>
+</section>
+
+</main>
+
+<script>
+function go(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
