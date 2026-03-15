@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Grafana PDF Reporter – Windows Setup Guide</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --accent: #f97316;
+    --accent2: #6366f1;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --border: #2e3347;
+    --code-bg: #0d1117;
+    --radius: 8px;
+    --font-mono: 'Cascadia Code', 'Consolas', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.7; }
+  
+  /* Layout */
+  .sidebar { position: fixed; top: 0; left: 0; width: 230px; height: 100vh; background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px 0; z-index: 100; }
+  .content { margin-left: 230px; padding: 32px 40px; max-width: 900px; }
+  
+  /* Sidebar */
+  .sidebar-title { padding: 0 20px 16px; font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: .12em; text-transform: uppercase; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .nav-section { padding: 8px 20px 4px; font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-top: 8px; }
+  .nav-link { display: block; padding: 6px 20px; color: var(--muted); text-decoration: none; font-size: 13px; border-left: 3px solid transparent; transition: all .15s; cursor: pointer; }
+  .nav-link:hover, .nav-link.active { color: var(--text); background: var(--surface2); border-left-color: var(--accent); }
+  
+  /* Headings */
+  h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; color: #fff; }
+  h2 { font-size: 19px; font-weight: 700; margin: 36px 0 14px; color: #fff; display: flex; align-items: center; gap: 10px; }
+  h3 { font-size: 15px; font-weight: 600; margin: 22px 0 10px; color: var(--text); }
+  
+  /* Step badges */
+  .step-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent); color: #fff; border-radius: 50%; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+  .step-badge.green { background: var(--green); }
+  .step-badge.indigo { background: var(--accent2); }
+
+  /* Phase header */
+  .phase { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin: 36px 0 20px; }
+  .phase-label { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  .phase h2 { margin: 0; font-size: 18px; }
+
+  /* Code blocks */
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); margin: 12px 0; overflow: hidden; }
+  .code-header { background: var(--surface2); padding: 7px 14px; font-size: 11px; font-weight: 600; color: var(--muted); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+  .code-header .lang { color: var(--accent); }
+  .copy-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); font-size: 11px; padding: 2px 8px; border-radius: 4px; cursor: pointer; transition: all .15s; }
+  .copy-btn:hover { background: var(--surface); color: var(--text); }
+  pre { padding: 16px; overflow-x: auto; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.6; color: #c9d1d9; }
+  .kw { color: #ff7b72; }
+  .str { color: #a5d6ff; }
+  .cmt { color: #8b949e; font-style: italic; }
+  .val { color: #79c0ff; }
+  .key { color: #d2a8ff; }
+
+  /* Callouts */
+  .callout { border-radius: var(--radius); padding: 13px 16px; margin: 14px 0; display: flex; gap: 12px; align-items: flex-start; font-size: 13px; border-left: 3px solid; }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .callout.info { background: #1e3a5f22; border-color: #3b82f6; }
+  .callout.info .callout-icon { color: #3b82f6; }
+  .callout.warn { background: #78350f22; border-color: var(--yellow); }
+  .callout.warn .callout-icon { color: var(--yellow); }
+  .callout.success { background: #14532d22; border-color: var(--green); }
+  .callout.success .callout-icon { color: var(--green); }
+
+  /* Cards */
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .card-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; color: var(--accent); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+  th { background: var(--surface2); padding: 8px 12px; text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid var(--border); }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: var(--surface); }
+
+  /* Tags */
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .tag.blue { background: #1e3a5f; color: #93c5fd; }
+  .tag.green { background: #14532d; color: #86efac; }
+  .tag.orange { background: #7c2d12; color: #fdba74; }
+
+  /* Separator */
+  hr { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
+
+  /* Subsection */
+  .subsection { border-left: 3px solid var(--surface2); padding-left: 18px; margin: 16px 0; }
+
+  /* Hero */
+  .hero { background: linear-gradient(135deg, #1a1d27 0%, #0f1117 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 32px; }
+  .hero p { color: var(--muted); margin-top: 8px; max-width: 600px; }
+  .hero-badges { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+
+  /* Path diagram */
+  .flow { display: flex; align-items: center; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+  .flow-node { background: var(--surface2); border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .flow-arrow { color: var(--muted); font-size: 16px; }
+
+  p { margin-bottom: 10px; color: var(--muted); }
+  li { color: var(--muted); margin-left: 20px; margin-bottom: 4px; }
+  strong { color: var(--text); }
+  section { scroll-margin-top: 20px; }
+
+  @media (max-width: 700px) {
+    .sidebar { display: none; }
+    .content { margin-left: 0; padding: 20px; }
+    .card-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<nav class="sidebar">
+  <div class="sidebar-title">📊 Grafana PDF Guide</div>
+  <div class="nav-section">Overview</div>
+  <a class="nav-link active" onclick="scrollTo('overview')">Architecture</a>
+  <a class="nav-link" onclick="scrollTo('prereqs')">Prerequisites</a>
+  <div class="nav-section">Phase 1 – Grafana</div>
+  <a class="nav-link" onclick="scrollTo('install-grafana')">Install Grafana</a>
+  <a class="nav-link" onclick="scrollTo('datasource')">Add Datasource</a>
+  <a class="nav-link" onclick="scrollTo('dashboard')">Build Dashboard</a>
+  <div class="nav-section">Phase 2 – Renderer</div>
+  <a class="nav-link" onclick="scrollTo('renderer')">Image Renderer</a>
+  <a class="nav-link" onclick="scrollTo('grafana-ini')">grafana.ini Config</a>
+  <div class="nav-section">Phase 3 – PDF Plugin</div>
+  <a class="nav-link" onclick="scrollTo('reporter-install')">Install Reporter</a>
+  <a class="nav-link" onclick="scrollTo('reporter-config')">Enable Plugin</a>
+  <a class="nav-link" onclick="scrollTo('generate-pdf')">Generate PDF</a>
+  <div class="nav-section">Reference</div>
+  <a class="nav-link" onclick="scrollTo('api-params')">API Parameters</a>
+  <a class="nav-link" onclick="scrollTo('troubleshoot')">Troubleshooting</a>
+</nav>
+
+<!-- Main Content -->
+<main class="content">
+
+<!-- HERO -->
+<section id="overview">
+<div class="hero">
+  <h1>Grafana → PDF on Windows</h1>
+  <p>A complete walkthrough: install Grafana OSS on Windows, build a dashboard with CSV-backed tabular and time-series data, then wire up the free <strong>grafana-dashboard-reporter-app</strong> plugin to export pixel-perfect PDFs.</p>
+  <div class="hero-badges">
+    <span class="tag blue">Grafana ≥ 10.4</span>
+    <span class="tag green">100% Free / OSS</span>
+    <span class="tag orange">Windows 10 / 11 / Server</span>
+  </div>
+</div>
+
+<h2>Architecture Overview</h2>
+<p>Understand the data flow first — everything else follows from this.</p>
+
+<div class="flow">
+  <div class="flow-node">CSV / TestData</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-node">Grafana OSS</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-node">grafana-image-renderer (svc)</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-node">dashboard-reporter-app (plugin)</div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-node">📄 PDF</div>
+</div>
+
+<div class="card-grid">
+  <div class="card">
+    <div class="card-title">grafana-image-renderer</div>
+    <p>Standalone Windows binary that runs headless Chromium. Grafana calls it to render panels as PNG images. <em>Required dependency</em> for the PDF reporter.</p>
+  </div>
+  <div class="card">
+    <div class="card-title">dashboard-reporter-app</div>
+    <p>Unsigned Grafana plugin (mahendrapaipuri). Stitches panel PNGs into an HTML template, then prints to PDF via Chromium. No LaTeX, no separate web server.</p>
+  </div>
+</div>
+</section>
+
+<hr/>
+
+<!-- PREREQUISITES -->
+<section id="prereqs">
+<h2><span class="step-badge">0</span> Prerequisites</h2>
+
+<table>
+  <thead><tr><th>Requirement</th><th>Version / Note</th><th>Where to get it</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Windows</strong></td><td>10, 11, or Server 2019+</td><td>–</td></tr>
+    <tr><td><strong>Grafana OSS or Enterprise</strong></td><td>≥ 10.4.0 recommended</td><td>grafana.com/download</td></tr>
+    <tr><td><strong>grafana-image-renderer</strong></td><td>v5+ (Windows binary)</td><td>GitHub Releases</td></tr>
+    <tr><td><strong>dashboard-reporter-app</strong></td><td>latest release zip</td><td>GitHub Releases</td></tr>
+    <tr><td><strong>PowerShell</strong></td><td>5.1+ (built-in)</td><td>–</td></tr>
+  </tbody>
+</table>
+
+<div class="callout warn">
+  <span class="callout-icon">⚠️</span>
+  <div>The <strong>grafana-image-renderer</strong> plugin form was deprecated in September 2025. Use the <strong>standalone Windows binary service</strong> from the GitHub Releases page instead — not the old <code>grafana-cli plugins install</code> method.</div>
+</div>
+</section>
+
+<hr/>
+
+<!-- PHASE 1 -->
+<div class="phase">
+  <div class="phase-label">Phase 1</div>
+  <h2>Install Grafana &amp; Build the Dashboard</h2>
+</div>
+
+<section id="install-grafana">
+<h2><span class="step-badge">1</span> Install Grafana on Windows</h2>
+
+<div class="subsection">
+<h3>Download & Install</h3>
+<div class="code-block">
+  <div class="code-header"><span>PowerShell — run as Administrator</span><span class="lang">pwsh</span></div>
+  <pre><span class="cmt"># 1. Download latest Grafana OSS installer (adjust version as needed)</span>
+<span class="val">$ver</span> = <span class="str">"12.0.1"</span>
+<span class="val">$url</span> = <span class="str">"https://dl.grafana.com/oss/release/grafana-$ver.windows-amd64.msi"</span>
+Invoke-WebRequest <span class="val">$url</span> -OutFile <span class="str">"grafana-$ver.msi"</span>
+
+<span class="cmt"># 2. Silent install</span>
+Start-Process msiexec.exe -Wait -ArgumentList <span class="str">'/i'</span>,<span class="str">"grafana-$ver.msi"</span>,<span class="str">'/quiet'</span>
+
+<span class="cmt"># 3. Start the Grafana Windows service</span>
+Start-Service -Name <span class="str">"Grafana"</span>
+
+<span class="cmt"># Default install path: C:\Program Files\GrafanaLabs\grafana\</span></pre>
+</div>
+<p>Open <strong>http://localhost:3000</strong> — default credentials are <code>admin / admin</code>.</p>
+</div>
+</section>
+
+<section id="datasource">
+<h2><span class="step-badge">2</span> Add a Datasource (TestData DB)</h2>
+<p>We use Grafana's built-in <strong>TestData</strong> datasource so no external database is needed — ideal for demos and local dev.</p>
+
+<div class="subsection">
+<h3>Via the UI</h3>
+<ol style="padding-left:20px; line-height:2">
+  <li>Go to <strong>Connections → Data sources → Add data source</strong></li>
+  <li>Search for and select <strong>"TestData"</strong></li>
+  <li>Click <strong>Save &amp; test</strong> — it should show a green checkmark</li>
+</ol>
+</div>
+
+<div class="callout info">
+  <span class="callout-icon">ℹ️</span>
+  <div>TestData ships with every Grafana install and supports scenarios: random walk, CSV metric values, table data, logs, annotations, and more. No network, no auth.</div>
+</div>
+</section>
+
+<section id="dashboard">
+<h2><span class="step-badge">3</span> Build the Sample Dashboard</h2>
+<p>We'll provision a dashboard JSON directly — this is faster and reproducible.</p>
+
+<div class="subsection">
+<h3>3a. Create the provisioning directory</h3>
+<div class="code-block">
+  <div class="code-header"><span>PowerShell</span><span class="lang">pwsh</span></div>
+  <pre><span class="val">$base</span> = <span class="str">"C:\Program Files\GrafanaLabs\grafana\conf\provisioning"</span>
+New-Item -ItemType Directory -Force -Path <span class="str">"$base\dashboards"</span>
+New-Item -ItemType Directory -Force -Path <span class="str">"$base\datasources"</span></pre>
+</div>
+
+<h3>3b. Datasource provisioning file</h3>
+<p>Save as <code>…\provisioning\datasources\testdata.yml</code></p>
+<div class="code-block">
+  <div class="code-header"><span>testdata.yml</span><span class="lang">YAML</span></div>
+  <pre><span class="key">apiVersion</span>: <span class="val">1</span>
+<span class="key">datasources</span>:
+  - <span class="key">name</span>: <span class="str">TestData</span>
+    <span class="key">type</span>: <span class="str">testdata</span>
+    <span class="key">access</span>: <span class="str">proxy</span>
+    <span class="key">isDefault</span>: <span class="kw">true</span></pre>
+</div>
+
+<h3>3c. Dashboard provisioning config</h3>
+<p>Save as <code>…\provisioning\dashboards\local.yml</code></p>
+<div class="code-block">
+  <div class="code-header"><span>local.yml</span><span class="lang">YAML</span></div>
+  <pre><span class="key">apiVersion</span>: <span class="val">1</span>
+<span class="key">providers</span>:
+  - <span class="key">name</span>: <span class="str">Local Dashboards</span>
+    <span class="key">folder</span>: <span class="str">Demo</span>
+    <span class="key">type</span>: <span class="str">file</span>
+    <span class="key">options</span>:
+      <span class="key">path</span>: <span class="str">C:\Program Files\GrafanaLabs\grafana\conf\provisioning\dashboards\json</span></pre>
+</div>
+
+<h3>3d. The Dashboard JSON</h3>
+<p>Save as <code>…\dashboards\json\sales-report.json</code></p>
+<p>This dashboard contains three panels: a <strong>time-series graph</strong>, a <strong>bar chart</strong>, and a <strong>table panel</strong>.</p>
+<div class="code-block">
+  <div class="code-header"><span>sales-report.json</span><span class="lang">JSON</span></div>
+  <pre>{
+  <span class="key">"title"</span>: <span class="str">"Sales Report Dashboard"</span>,
+  <span class="key">"uid"</span>: <span class="str">"sales-demo-001"</span>,
+  <span class="key">"schemaVersion"</span>: <span class="val">39</span>,
+  <span class="key">"refresh"</span>: <span class="str">"30s"</span>,
+  <span class="key">"time"</span>: { <span class="key">"from"</span>: <span class="str">"now-7d"</span>, <span class="key">"to"</span>: <span class="str">"now"</span> },
+  <span class="key">"panels"</span>: [
+    {
+      <span class="key">"id"</span>: <span class="val">1</span>, <span class="key">"type"</span>: <span class="str">"timeseries"</span>,
+      <span class="key">"title"</span>: <span class="str">"Daily Revenue Trend"</span>,
+      <span class="key">"gridPos"</span>: { <span class="key">"x"</span>:<span class="val">0</span>,<span class="key">"y"</span>:<span class="val">0</span>,<span class="key">"w"</span>:<span class="val">16</span>,<span class="key">"h"</span>:<span class="val">8</span> },
+      <span class="key">"datasource"</span>: { <span class="key">"type"</span>: <span class="str">"testdata"</span> },
+      <span class="key">"targets"</span>: [{
+        <span class="key">"refId"</span>: <span class="str">"A"</span>,
+        <span class="key">"scenarioId"</span>: <span class="str">"random_walk"</span>,
+        <span class="key">"alias"</span>: <span class="str">"Revenue ($)"</span>,
+        <span class="key">"startValue"</span>: <span class="val">5000</span>, <span class="key">"spread"</span>: <span class="val">800</span>
+      }],
+      <span class="key">"fieldConfig"</span>: { <span class="key">"defaults"</span>: {
+        <span class="key">"unit"</span>: <span class="str">"currencyUSD"</span>,
+        <span class="key">"color"</span>: { <span class="key">"mode"</span>: <span class="str">"palette-classic"</span> },
+        <span class="key">"custom"</span>: { <span class="key">"fillOpacity"</span>: <span class="val">15</span>, <span class="key">"lineWidth"</span>: <span class="val">2</span> }
+      }}
+    },
+    {
+      <span class="key">"id"</span>: <span class="val">2</span>, <span class="key">"type"</span>: <span class="str">"timeseries"</span>,
+      <span class="key">"title"</span>: <span class="str">"Orders vs Returns"</span>,
+      <span class="key">"gridPos"</span>: { <span class="key">"x"</span>:<span class="val">16</span>,<span class="key">"y"</span>:<span class="val">0</span>,<span class="key">"w"</span>:<span class="val">8</span>,<span class="key">"h"</span>:<span class="val">8</span> },
+      <span class="key">"datasource"</span>: { <span class="key">"type"</span>: <span class="str">"testdata"</span> },
+      <span class="key">"targets"</span>: [
+        { <span class="key">"refId"</span>: <span class="str">"A"</span>, <span class="key">"scenarioId"</span>: <span class="str">"random_walk"</span>, <span class="key">"alias"</span>: <span class="str">"Orders"</span>, <span class="key">"startValue"</span>: <span class="val">120</span> },
+        { <span class="key">"refId"</span>: <span class="str">"B"</span>, <span class="key">"scenarioId"</span>: <span class="str">"random_walk"</span>, <span class="key">"alias"</span>: <span class="str">"Returns"</span>, <span class="key">"startValue"</span>: <span class="val">8</span>, <span class="key">"spread"</span>: <span class="val">3</span> }
+      ]
+    },
+    {
+      <span class="key">"id"</span>: <span class="val">3</span>, <span class="key">"type"</span>: <span class="str">"table"</span>,
+      <span class="key">"title"</span>: <span class="str">"Product Sales Summary"</span>,
+      <span class="key">"gridPos"</span>: { <span class="key">"x"</span>:<span class="val">0</span>,<span class="key">"y"</span>:<span class="val">8</span>,<span class="key">"w"</span>:<span class="val">24</span>,<span class="key">"h"</span>:<span class="val">8</span> },
+      <span class="key">"datasource"</span>: { <span class="key">"type"</span>: <span class="str">"testdata"</span> },
+      <span class="key">"targets"</span>: [{
+        <span class="key">"refId"</span>: <span class="str">"A"</span>,
+        <span class="key">"scenarioId"</span>: <span class="str">"csv_metric_values"</span>,
+        <span class="key">"alias"</span>: <span class="str">"Sales Data"</span>,
+        <span class="key">"csvContent"</span>: <span class="str">"Product,Region,Units,Revenue\nWidget A,North,340,17000\nWidget B,South,210,10500\nGadget X,East,520,41600\nGadget Y,West,180,14400\nTool Z,North,95,7125\nTool Z,South,310,23250"</span>
+      }],
+      <span class="key">"options"</span>: { <span class="key">"sortBy"</span>: [{ <span class="key">"displayName"</span>: <span class="str">"Revenue"</span>, <span class="key">"desc"</span>: <span class="kw">true</span> }] },
+      <span class="key">"fieldConfig"</span>: { <span class="key">"defaults"</span>: { <span class="key">"filterable"</span>: <span class="kw">true</span> },
+        <span class="key">"overrides"</span>: [{ <span class="key">"matcher"</span>: { <span class="key">"id"</span>: <span class="str">"byName"</span>, <span class="key">"options"</span>: <span class="str">"Revenue"</span> },
+          <span class="key">"properties"</span>: [{ <span class="key">"id"</span>: <span class="str">"unit"</span>, <span class="key">"value"</span>: <span class="str">"currencyUSD"</span> }]
+        }]
+      }
+    }
+  ]
+}</pre>
+</div>
+
+<h3>3e. Restart Grafana to load the provisioned dashboard</h3>
+<div class="code-block">
+  <div class="code-header"><span>PowerShell (Admin)</span><span class="lang">pwsh</span></div>
+  <pre>Restart-Service -Name <span class="str">"Grafana"</span></pre>
+</div>
+<p>Navigate to <strong>http://localhost:3000/dashboards</strong> → folder <em>Demo</em> → <em>Sales Report Dashboard</em>. Note the dashboard <strong>UID</strong> from the URL: <code>sales-demo-001</code>.</p>
+</div>
+</section>
+
+<hr/>
+
+<!-- PHASE 2 -->
+<div class="phase">
+  <div class="phase-label">Phase 2</div>
+  <h2>Install grafana-image-renderer (Windows Binary)</h2>
+</div>
+
+<section id="renderer">
+<h2><span class="step-badge green">4</span> Download &amp; Run the Renderer Service</h2>
+
+<div class="callout warn">
+  <span class="callout-icon">⚠️</span>
+  <div>Do <strong>not</strong> use <code>grafana-cli plugins install grafana-image-renderer</code> — the plugin mode is deprecated as of September 2025. Use the standalone binary service.</div>
+</div>
+
+<div class="subsection">
+<h3>4a. Download the Windows binary</h3>
+<div class="code-block">
+  <div class="code-header"><span>PowerShell (Admin)</span><span class="lang">pwsh</span></div>
+  <pre><span class="cmt"># Download latest release from GitHub (check https://github.com/grafana/grafana-image-renderer/releases)</span>
+<span class="val">$rendererVer</span> = <span class="str">"5.0.2"</span>  <span class="cmt"># update to latest</span>
+<span class="val">$url</span> = <span class="str">"https://github.com/grafana/grafana-image-renderer/releases/download/v$rendererVer/grafana-image-renderer-$rendererVer-windows-x64.zip"</span>
+Invoke-WebRequest <span class="val">$url</span> -OutFile <span class="str">"renderer.zip"</span>
+
+Expand-Archive <span class="str">"renderer.zip"</span> -DestinationPath <span class="str">"C:\grafana-renderer"</span>
+</pre>
+</div>
+
+<h3>4b. Create a config file</h3>
+<p>Save as <code>C:\grafana-renderer\config.json</code></p>
+<div class="code-block">
+  <div class="code-header"><span>config.json</span><span class="lang">JSON</span></div>
+  <pre>{
+  <span class="key">"service"</span>: {
+    <span class="key">"host"</span>: <span class="str">"localhost"</span>,
+    <span class="key">"port"</span>: <span class="val">8081</span>
+  },
+  <span class="key">"rendering"</span>: {
+    <span class="key">"args"</span>: [<span class="str">"--no-sandbox"</span>, <span class="str">"--disable-setuid-sandbox"</span>],
+    <span class="key">"timeout"</span>: <span class="val">30</span>,
+    <span class="key">"mode"</span>: <span class="str">"default"</span>
+  },
+  <span class="key">"security"</span>: {
+    <span class="key">"authToken"</span>: <span class="str">"my-renderer-secret-token"</span>
+  }
+}</pre>
+</div>
+
+<h3>4c. Run as a Windows Service (NSSM)</h3>
+<div class="code-block">
+  <div class="code-header"><span>PowerShell (Admin) — install NSSM first from nssm.cc</span><span class="lang">pwsh</span></div>
+  <pre><span class="cmt"># Using NSSM (Non-Sucking Service Manager) to wrap the renderer EXE</span>
+nssm install GrafanaRenderer <span class="str">"C:\grafana-renderer\grafana-image-renderer.exe"</span>
+nssm set GrafanaRenderer AppParameters <span class="str">"server --config=C:\grafana-renderer\config.json"</span>
+nssm set GrafanaRenderer AppDirectory <span class="str">"C:\grafana-renderer"</span>
+nssm set GrafanaRenderer Start SERVICE_AUTO_START
+nssm set GrafanaRenderer ObjectName LocalSystem
+Start-Service GrafanaRenderer</pre>
+</div>
+
+<div class="callout success">
+  <span class="callout-icon">✅</span>
+  <div>Verify the renderer is up: <code>Invoke-WebRequest http://localhost:8081</code> — you should get a 200 response or renderer info page.</div>
+</div>
+</div>
+</section>
+
+<section id="grafana-ini">
+<h2><span class="step-badge green">5</span> Configure grafana.ini to Use the Renderer</h2>
+<p>Edit <code>C:\Program Files\GrafanaLabs\grafana\conf\grafana.ini</code></p>
+
+<div class="code-block">
+  <div class="code-header"><span>grafana.ini — relevant sections</span><span class="lang">INI</span></div>
+  <pre>[rendering]
+server_url = http://localhost:8081/render
+callback_url = http://localhost:3000/
+renderer_token = my-renderer-secret-token
+concurrent_render_request_limit = 10
+
+[feature_toggles]
+<span class="cmt"># Required for reporter plugin on Grafana > 10.4.3</span>
+enable = accessControlOnCall externalServiceAccounts
+
+[plugins]
+<span class="cmt"># Allow the unsigned reporter plugin to load</span>
+allow_loading_unsigned_plugins = mahendrapaipuri-dashboardreporter-app</pre>
+</div>
+
+<div class="callout info">
+  <span class="callout-icon">ℹ️</span>
+  <div>The <code>renderer_token</code> in <code>grafana.ini</code> must match the <code>authToken</code> value in the renderer's <code>config.json</code>.</div>
+</div>
+</section>
+
+<hr/>
+
+<!-- PHASE 3 -->
+<div class="phase">
+  <div class="phase-label">Phase 3</div>
+  <h2>Install &amp; Use the Dashboard Reporter (PDF) Plugin</h2>
+</div>
+
+<section id="reporter-install">
+<h2><span class="step-badge indigo">6</span> Install the Reporter Plugin</h2>
+
+<div class="subsection">
+<h3>6a. Download the plugin zip</h3>
+<div class="code-block">
+  <div class="code-header"><span>PowerShell (Admin)</span><span class="lang">pwsh</span></div>
+  <pre><span class="cmt"># Grab latest release from GitHub</span>
+<span class="val">$pluginVer</span> = <span class="str">"1.8.0"</span>  <span class="cmt"># check github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases</span>
+<span class="val">$url</span> = <span class="str">"https://github.com/mahendrapaipuri/grafana-dashboard-reporter-app/releases/download/v$pluginVer/mahendrapaipuri-dashboardreporter-app-$pluginVer.zip"</span>
+Invoke-WebRequest <span class="val">$url</span> -OutFile <span class="str">"reporter-plugin.zip"</span>
+
+<span class="cmt"># Extract into Grafana's plugins directory</span>
+<span class="val">$pluginsDir</span> = <span class="str">"C:\Program Files\GrafanaLabs\grafana\data\plugins"</span>
+Expand-Archive <span class="str">"reporter-plugin.zip"</span> -DestinationPath <span class="val">$pluginsDir</span>
+
+<span class="cmt"># Confirm folder name matches expected plugin ID</span>
+Rename-Item <span class="str">"$pluginsDir\mahendrapaipuri-dashboardreporter-app-$pluginVer"</span> `
+            <span class="str">"$pluginsDir\mahendrapaipuri-dashboardreporter-app"</span> `
+            -ErrorAction SilentlyContinue</pre>
+</div>
+</div>
+</section>
+
+<section id="reporter-config">
+<h2><span class="step-badge indigo">7</span> Enable &amp; Configure the Plugin</h2>
+
+<div class="subsection">
+<h3>7a. Restart Grafana</h3>
+<div class="code-block">
+  <div class="code-header"><span>PowerShell (Admin)</span><span class="lang">pwsh</span></div>
+  <pre>Restart-Service -Name <span class="str">"Grafana"</span></pre>
+</div>
+
+<h3>7b. Enable via Grafana UI</h3>
+<ol style="padding-left:20px; line-height:2.2">
+  <li>Log in as <strong>admin</strong> at <code>http://localhost:3000</code></li>
+  <li>Go to <strong>Apps → Dashboard Reporter App → Configuration</strong></li>
+  <li>Toggle the plugin to <strong>Enabled</strong></li>
+  <li>Set <strong>Grafana App URL</strong> → <code>http://localhost:3000</code></li>
+  <li>Under <em>Layout</em>, choose <strong>Grid</strong> (mirrors dashboard layout) or <strong>Simple</strong></li>
+  <li>Click <strong>Save</strong></li>
+</ol>
+
+<div class="callout warn">
+  <span class="callout-icon">⚠️</span>
+  <div>You will see <em>"Invalid plugin signature"</em> in Grafana logs — this is expected for community plugins. It is non-fatal and controlled by the <code>allow_loading_unsigned_plugins</code> setting you added in Step 5.</div>
+</div>
+
+<h3>7c. (Optional) Service Account Token for Grafana &gt; 10.4.4</h3>
+<p>If the <code>externalServiceAccounts</code> feature flag cannot be enabled, create a manual service account token:</p>
+<ol style="padding-left:20px; line-height:2">
+  <li><strong>Administration → Service accounts → Add service account</strong></li>
+  <li>Role: <strong>Viewer</strong> (read-only is sufficient)</li>
+  <li>Generate a token and paste it into the reporter plugin configuration page under <em>Service Account Token</em></li>
+</ol>
+</div>
+</section>
+
+<section id="generate-pdf">
+<h2><span class="step-badge indigo">8</span> Generate Your First PDF</h2>
+
+<div class="subsection">
+<h3>Method A — Browser URL (simplest)</h3>
+<p>Open this URL in your browser while logged in as admin:</p>
+<div class="code-block">
+  <div class="code-header"><span>Browser Address Bar</span></div>
+  <pre>http://localhost:3000/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report?dashUid=sales-demo-001</pre>
+</div>
+<p>The browser will download a PDF of the full dashboard.</p>
+
+<h3>Method B — PowerShell / curl (for automation)</h3>
+<div class="code-block">
+  <div class="code-header"><span>PowerShell</span><span class="lang">pwsh</span></div>
+  <pre><span class="val">$grafanaUrl</span> = <span class="str">"http://localhost:3000"</span>
+<span class="val">$dashUid</span>   = <span class="str">"sales-demo-001"</span>
+<span class="val">$token</span>     = <span class="str">"Bearer &lt;your-service-account-token&gt;"</span>
+
+<span class="val">$reportUrl</span> = <span class="str">"$grafanaUrl/api/plugins/mahendrapaipuri-dashboardreporter-app/resources/report"</span> `
+           + <span class="str">"?dashUid=$dashUid"</span> `
+           + <span class="str">"&amp;from=now-7d&amp;to=now"</span> `
+           + <span class="str">"&amp;includePanelDataID=3"</span>  <span class="cmt"># panel 3 = the table panel</span>
+
+Invoke-WebRequest -Uri <span class="val">$reportUrl</span> `
+  -Headers @{ <span class="str">"Authorization"</span> = <span class="val">$token</span> } `
+  -OutFile <span class="str">".\SalesReport-$(Get-Date -Format 'yyyyMMdd').pdf"</span>
+
+Write-Host <span class="str">"PDF saved."</span> -ForegroundColor Green</pre>
+</div>
+
+<div class="callout success">
+  <span class="callout-icon">✅</span>
+  <div>The <code>includePanelDataID=3</code> parameter tells the reporter to also append the <strong>raw tabular data</strong> from panel 3 (the Sales Summary table) at the end of the PDF, in addition to its visual screenshot.</div>
+</div>
+</div>
+</section>
+
+<hr/>
+
+<!-- REFERENCE -->
+<section id="api-params">
+<h2>📋 Reporter API — Key Query Parameters</h2>
+<table>
+  <thead><tr><th>Parameter</th><th>Example Value</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>dashUid</code></td><td><code>sales-demo-001</code></td><td>Dashboard UID (required)</td></tr>
+    <tr><td><code>from</code> / <code>to</code></td><td><code>now-7d</code> / <code>now</code></td><td>Time range override</td></tr>
+    <tr><td><code>var-region</code></td><td><code>North</code></td><td>Pass a template variable value</td></tr>
+    <tr><td><code>includePanelDataID</code></td><td><code>3</code></td><td>Append raw CSV/table data from panel N</td></tr>
+    <tr><td><code>layout</code></td><td><code>grid</code> or <code>simple</code></td><td>PDF layout mode</td></tr>
+    <tr><td><code>orientation</code></td><td><code>landscape</code></td><td>Page orientation</td></tr>
+    <tr><td><code>includePanelID</code></td><td><code>1</code></td><td>Include only specific panel(s)</td></tr>
+    <tr><td><code>excludePanelID</code></td><td><code>2</code></td><td>Exclude specific panel(s)</td></tr>
+  </tbody>
+</table>
+</section>
+
+<hr/>
+
+<section id="troubleshoot">
+<h2>🔧 Troubleshooting</h2>
+<table>
+  <thead><tr><th>Symptom</th><th>Likely Cause</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td>PDF is blank / panels missing</td><td>Renderer not running or misconfigured</td><td>Check <code>sc query GrafanaRenderer</code> and test <code>http://localhost:8081</code></td></tr>
+    <tr><td>Plugin not found (404)</td><td>Plugin folder name mismatch or not loaded</td><td>Check Grafana logs for <code>plugin.loader</code> lines; verify folder is named exactly <code>mahendrapaipuri-dashboardreporter-app</code></td></tr>
+    <tr><td>"Invalid plugin signature" error</td><td>Normal for unsigned community plugins</td><td>Confirm <code>allow_loading_unsigned_plugins</code> is set in <code>grafana.ini</code></td></tr>
+    <tr><td>401 / Unauthorized on PDF endpoint</td><td>Missing or wrong auth token</td><td>Pass a valid service account Bearer token; confirm plugin is enabled and token is configured</td></tr>
+    <tr><td>Renderer token mismatch</td><td><code>renderer_token</code> ≠ <code>authToken</code></td><td>Make both values identical in <code>grafana.ini</code> and <code>config.json</code></td></tr>
+    <tr><td>Chromium crash / no-sandbox error</td><td>Windows sandbox restrictions</td><td>Add <code>"--no-sandbox"</code> to renderer <code>config.json</code> args (already in Step 4b config)</td></tr>
+  </tbody>
+</table>
+</section>
+
+</main>
+
+<script>
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
