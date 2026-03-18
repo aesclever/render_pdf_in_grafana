@@ -27,7 +27,7 @@ The problem reduces to: *render a browser-based dashboard → capture panel imag
 The troubleshooting table at the bottom covers the most common Windows-specific gotchas (Chromium sandboxing, unsigned plugin warnings, token mismatches).
 
 
-Start → ![HERE](WindowsIndex.html)
+Start → ![HERE](https://aesclever.github.io/render_pdf_in_grafana/)
 
 ---
 ---
@@ -56,4 +56,4 @@ The renderer ships its own Chromium binary, but on Ubuntu it needs shared system
 **Automation: PowerShell → curl + cron**
 `curl` with a Bearer token is the idiomatic Linux equivalent of `Invoke-WebRequest`. A `crontab` entry replaces Windows Task Scheduler for scheduled PDF exports.
 
-Start → ![HERE](UbuntuIndex.html)
+Start → ![HERE](https://aesclever.github.io/render_pdf_in_grafana/)
